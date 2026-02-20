@@ -10,5 +10,6 @@ les pins arduino                         les pins ESP32
   D4      RX                            16 RX
   D5      TX                            17 TX
 
-pour avoir l'adresse de connexion avec Azure ouvre le terminal et tape cette commande
+pour avoir l'adresse de connexion avec Azure ouvre le terminal et tape cette commande :
+
 az iot hub generate-sas-token --device-id SolarTracker1 --hub-name projet-IoT --duration 31536000
