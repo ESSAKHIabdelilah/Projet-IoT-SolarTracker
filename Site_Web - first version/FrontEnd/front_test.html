@@ -1,0 +1,394 @@
+<!--
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test WebSocket</title>
+</head>
+<body>
+    <h1>Test du Backend WebSocket</h1>
+    <div id="messages" style="background: #f4f4f4; padding: 10px; font-family: monospace;"></div>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:8000/ws");
+        const messagesDiv = document.getElementById("messages");
+
+        ws.onopen = () => {
+            messagesDiv.innerHTML += "<p style='color: green;'>✅ Connecté au serveur FastAPI</p>";
+        };
+
+        ws.onmessage = (event) => {
+            console.log("Donnée reçue :", event.data);
+            messagesDiv.innerHTML += `<p>📩 Message reçu : ${event.data}</p>`;
+        };
+
+        ws.onclose = () => {
+            messagesDiv.innerHTML += "<p style='color: red;'>❌ Déconnecté du serveur</p>";
+        };
+    </script>
+</body>
+</html>-->
+
+
+
+
+
+<!--
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Solar Tracker</title>
+    <style>
+        /* Le fond d'écran gris clair de ton image */
+        body {
+            background-color: #e6e6e6;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Le conteneur principal pour centrer tout ça */
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* L'espace entre le haut et la grille */
+        }
+
+        /* Le style de base pour toutes les boîtes blanches */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            border: 2px solid #ccc; /* La bordure grise de ton image */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Petite ombre légère */
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* L'en-tête (la grande boîte du haut) */
+        .header-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* La disposition en grille pour les petites boîtes */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 2 colonnes de même taille */
+            gap: 15px; /* L'espace entre les boîtes de la grille */
+        }
+
+        /* Le style du texte à l'intérieur des cartes */
+        h2, h3 { margin-top: 0; color: #333; }
+        .valeur { font-size: 2.5em; font-weight: bold; color: #0078D4; margin: 10px 0; }
+        
+        /* La boîte de logs en bas à droite */
+        #messages {
+            background: #f4f4f4;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.8em;
+            height: 80px;
+            overflow-y: auto;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card header-card">
+            <div>
+                <h2>☀️ Solar Tracker Control Panel</h2>
+                <p style="margin: 0; color: gray;">Supervision en temps réel</p>
+            </div>
+            <div id="status" style="font-weight: bold; color: orange;">Connexion en cours...</div>
+        </div>
+
+        <div class="grid-container">
+            <div class="card">
+                <h3>Lumière</h3>
+                <div class="valeur" id="val-lux">-- lx</div>
+            </div>
+            
+            <div class="card">
+                <h3>Température</h3>
+                <div class="valeur" id="val-temp" style="color: #D32F2F;">-- °C</div>
+            </div>
+
+            <div class="card">
+                <h3>Humidité</h3>
+                <div class="valeur" id="val-hum" style="color: #1976D2;">-- %</div>
+            </div>
+
+            <div class="card">
+                <h3>Angle Horizontal (Pan)</h3>
+                <div class="valeur" id="val-angh" style="color: #388E3C;">-- °</div>
+            </div>
+
+            <div class="card">
+                <h3>Angle Vertical (Tilt)</h3>
+                <div class="valeur" id="val-angv" style="color: #388E3C;">-- °</div>
+            </div>
+
+            <div class="card">
+                <h3>Flux de données brut</h3>
+                <div id="messages">En attente de données...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:8000/ws");
+        const messagesDiv = document.getElementById("messages");
+        const statusDiv = document.getElementById("status");
+
+        ws.onopen = () => {
+            statusDiv.innerHTML = "✅ Connecté";
+            statusDiv.style.color = "green";
+            messagesDiv.innerHTML = "<span style='color: green;'>Connecté au serveur FastAPI</span><br>";
+        };
+
+        ws.onmessage = (event) => {
+            // 1. On affiche le message brut dans la boîte numéro 6
+            messagesDiv.innerHTML = `> ${event.data}<br>` + messagesDiv.innerHTML;
+
+            try {
+                // 2. On transforme le texte reçu en un vrai objet JavaScript
+                const data = JSON.parse(event.data);
+
+                // 3. On met à jour chaque boîte avec la bonne valeur !
+                if (data.lux !== undefined) document.getElementById("val-lux").innerText = data.lux + " lx";
+                if (data.temperature !== undefined) document.getElementById("val-temp").innerText = data.temperature + " °C";
+                if (data.humidity !== undefined) document.getElementById("val-hum").innerText = data.humidity + " %";
+                if (data.angle_h !== undefined) document.getElementById("val-angh").innerText = data.angle_h + " °";
+                if (data.angle_v !== undefined) document.getElementById("val-angv").innerText = data.angle_v + " °";
+                
+            } catch (error) {
+                console.error("Le message reçu n'est pas un JSON valide :", event.data);
+            }
+        };
+
+        ws.onclose = () => {
+            statusDiv.innerHTML = "❌ Déconnecté";
+            statusDiv.style.color = "red";
+            messagesDiv.innerHTML = "<span style='color: red;'>Déconnecté du serveur</span><br>" + messagesDiv.innerHTML;
+        };
+    </script>
+</body>
+</html>-->
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Solar Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #e6e6e6;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            border: 2px solid #ccc;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        h2, h3 { margin-top: 0; color: #333; }
+        .valeur { font-size: 2.5em; font-weight: bold; color: #0078D4; margin: 10px 0; }
+        
+        #messages {
+            background: #f4f4f4;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.8em;
+            height: 80px;
+            overflow-y: auto;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card header-card">
+            <div>
+                <h2>☀️ Solar Tracker Control Panel</h2>
+                <p style="margin: 0; color: gray;">Supervision en temps réel</p>
+                <br>
+                <p style="margin: 0; color: gray;">Informations reçus : <span id="compteur" style="color: #000000;">0</span> </p>
+            </div>
+
+            <div id="status" style="font-weight: bold; color: orange;">Connexion en cours...</div>
+
+        </div>
+        <div class="grid-container">
+            <div class="card">
+                <h3>Lumière</h3>
+                <div class="valeur" id="val-lux" style="font-weight: bold; color: orange;">-- lx</div>
+            </div>
+            
+            <div class="card">
+                <h3>Température</h3>
+                <div class="valeur" id="val-temp" style="color: #D32F2F;">-- °C</div>
+            </div>
+
+            <div class="card">
+                <h3>Humidité</h3>
+                <div class="valeur" id="val-hum" style="color: #1976D2;">-- %</div>
+            </div>
+
+            <div class="card">
+                <h3>Angles (Horizontal / Vertical)</h3>
+                <div class="valeur" style="color: #388E3C;">
+                    <span id="val-angh">--</span>° / <span id="val-angv">--</span>°
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Évolution Lumière</h3>
+                <canvas id="luxChart"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Évolution Température</h3>
+                <canvas id="tempChart"></canvas>
+            </div>
+
+            <div class="card" style="grid-column: span 2;">
+                <h3>Flux de données brut</h3>
+                <div id="messages">En attente de données...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION DES GRAPHIQUES ---
+        const maxPoints = 15; // On garde 15 points maximum pour ne pas écraser le graphique
+
+        // Fonction générique pour créer un joli graphique
+        function creerGraphique(idCanvas, label, couleurLigne, couleurFond) {
+            const ctx = document.getElementById(idCanvas).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // Les heures
+                    datasets: [{
+                        label: label,
+                        data: [], // Les valeurs
+                        borderColor: couleurLigne,
+                        backgroundColor: couleurFond,
+                        borderWidth: 2,
+                        tension: 0.4, // Courbe adoucie
+                        fill: true // Remplissage sous la courbe
+                    }]
+                },
+                options: {
+                    animation: false, // Pas d'animation pour fluidifier le temps réel
+                    scales: { x: { display: false } } // On cache les heures sur l'axe X pour que ce soit plus propre
+                }
+            });
+        }
+
+        // Création des deux graphiques
+        const chartLux = creerGraphique('luxChart', 'Lumière (lx)', '#E1AD01', 'rgba(225, 173, 1, 0.2)');
+        const chartTemp = creerGraphique('tempChart', 'Température (°C)', '#D32F2F', 'rgba(211, 47, 47, 0.2)');
+
+
+        // --- WEBSOCKET ET MISE À JOUR ---
+        const ws = new WebSocket("ws://localhost:8000/ws");
+        const messagesDiv = document.getElementById("messages");
+        const statusDiv = document.getElementById("status");
+
+        let totalMessages = 0;
+
+        ws.onopen = () => {
+            statusDiv.innerHTML = "✅ Connecté";
+            statusDiv.style.color = "green";
+        };
+
+        ws.onmessage = (event) => {
+            messagesDiv.innerHTML = `> ${event.data}<br>` + messagesDiv.innerHTML;
+
+            totalMessages++;
+            document.getElementById("compteur").innerText = totalMessages;
+
+            try {
+                const data = JSON.parse(event.data);
+                const heureActuelle = new Date().toLocaleTimeString();
+
+                // 1. Mise à jour des textes
+                if (data.lux !== undefined) document.getElementById("val-lux").innerText = data.lux + " lx";
+                if (data.temperature !== undefined) document.getElementById("val-temp").innerText = data.temperature + " °C";
+                if (data.humidity !== undefined) document.getElementById("val-hum").innerText = data.humidity + " %";
+                if (data.angle_h !== undefined) document.getElementById("val-angh").innerText = data.angle_h;
+                if (data.angle_v !== undefined) document.getElementById("val-angv").innerText = data.angle_v;
+
+                // 2. Mise à jour du Graphique de Lumière
+                if (data.lux !== undefined) {
+                    chartLux.data.labels.push(heureActuelle);
+                    chartLux.data.datasets[0].data.push(data.lux);
+                    if (chartLux.data.labels.length > maxPoints) {
+                        chartLux.data.labels.shift();
+                        chartLux.data.datasets[0].data.shift();
+                    }
+                    chartLux.update();
+                }
+
+                // 3. Mise à jour du Graphique de Température
+                if (data.temperature !== undefined) {
+                    chartTemp.data.labels.push(heureActuelle);
+                    chartTemp.data.datasets[0].data.push(data.temperature);
+                    if (chartTemp.data.labels.length > maxPoints) {
+                        chartTemp.data.labels.shift();
+                        chartTemp.data.datasets[0].data.shift();
+                    }
+                    chartTemp.update();
+                }
+
+            } catch (error) {
+                console.error("Erreur JSON :", error);
+            }
+        };
+
+        ws.onclose = () => {
+            statusDiv.innerHTML = "❌ Déconnecté";
+            statusDiv.style.color = "red";
+        };
+    </script>
+</body>
+</html>

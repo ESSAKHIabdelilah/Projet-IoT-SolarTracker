@@ -1,0 +1,3 @@
+# Exemple : si tes clés sont dans config.py ou .env
+config.py
+.env
