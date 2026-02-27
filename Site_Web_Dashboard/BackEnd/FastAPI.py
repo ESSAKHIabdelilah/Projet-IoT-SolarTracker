@@ -9,8 +9,8 @@ from azure.eventhub.aio import EventHubConsumerClient
 connected_clients = set()
 
 # TA CLÉ AZURE
-CONNECTION_STR = ""
-CONSUMER_GROUP = ""
+CONNECTION_STR = "Endpoint=sb://ihsuprodparres002dednamespace.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=RKhZvKSdBYkb8vRQrjQTaBzIy3+jhDMcuAIoTDzY+Wc=;EntityPath=iothub-ehub-projet-iot-55741135-2d8724e702"
+CONSUMER_GROUP = "backend-python"
 
 # --- 1. FONCTIONS QUI ÉCOUTENT AZURE ---
 async def on_event(partition_context, event):

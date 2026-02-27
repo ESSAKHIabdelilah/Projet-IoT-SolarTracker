@@ -1,293 +1,155 @@
-# Projet IoT Complet - Solar Tracker Dashboard
+# Projet IoT Complet — Solar Tracker Dashboard
 
 ## 📋 Description
 
-Système IoT complet pour la surveillance en temps réel de capteurs ESP32 connectés à Azure IoT Hub. Le projet comprend :
+Système IoT complet pour la surveillance en temps réel de la luminosité et la visualisation des données sur Azure et sur un tableau de bord web. Le projet comprend :
 
-- **Simulation ESP32** : Script Python pour simuler un dispositif IoT
-- **Firmware ESP32** : Code Arduino pour ESP32 réel
-- **Backend (FastAPI)** : Serveur Python qui reçoit les données d'Azure et les diffuse en temps réel
-- **Frontend (HTML/JavaScript)** : Dashboard interactif avec graphiques en temps réel
+- **Simulation ESP32** : script Python simulant le capteur KS0530 et l'ESP32, envoyant les données vers Azure.
+- **Script_ESP32** : code pour l'ESP32 — envoi des données à Azure via MQTT.
+- **Script_Arduino** : code pour l'Arduino — contrôle du système et envoi des données à l'ESP32 via UART.
+- **Backend (FastAPI)** : serveur Python qui consomme les données depuis Azure et les diffuse en temps réel (WebSocket).
+- **Frontend (HTML/JavaScript)** : tableau de bord interactif avec graphiques en temps réel.
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────┐
-│   ESP32 / IoT   │  → Envoie température, humidité
-└────────┬────────┘
-         │
+┌───────────────────────┐
+│   Suiveur solaire     │ → Température, humidité, angles, luminosité (KS0530) + commande moteurs
+└────────┬──────────────┘
+         │ UART
+         ▼
+┌───────────────────┐
+│      ESP32        │ → Reçoit via UART et envoie les données à Azure (MQTT)
+└────────┬──────────┘
+         │ MQTT
          ▼
 ┌─────────────────────────────┐
-│   Azure IoT Hub / EventHub   │  → Reçoit et stocke
+│   Azure IoT Hub / EventHub  │ → Réception et stockage
 └────────┬────────────────────┘
-         │
+         │ AMQP
          ▼
 ┌──────────────────────┐
-│  Backend (FastAPI)   │  → Consomme & diffuse via WebSocket
+│  Backend (FastAPI)   │ → Consomme & diffuse via WebSocket
 └────────┬─────────────┘
-         │
+         │ WebSockets
          ▼
 ┌──────────────────────┐
-│  Frontend (HTML/JS)  │  → Affiche le dashboard
+│  Frontend (HTML/JS)  │ → Affiche le tableau de bord
 └──────────────────────┘
 ```
 
-## 📦 Prérequis
+## Prérequis
 
 ### Système
-- Python 3.8+ installé
-- Node.js/npm (optionnel, pour le développement frontend)
-- Un compte Azure IoT Hub configuré
+- Système KS0530
+- ESP32
+- Python 3.8+
+- Arduino IDE et bibliothèques requises
+- Compte Azure IoT Hub configuré
 
 ### Clés d'accès Azure
-- Connection String du dispositif ESP32
-- Connection String Event Hub pour le backend
+- Chaîne de connexion (Connection String) du dispositif ESP32
+- Chaîne de connexion Event Hub pour le backend
 
-## ⚙️ Installation
+### Branchement UART
+- ESP32 : RX = 16, TX = 17
+- Arduino : RX = D4, TX = D5
 
-### 1. Cloner/Préparer le projet
+## 🚀 Déploiement (mode développement)
 
-```bash
-cd projet_complet
-```
-
-### 2. Créer un environnement virtuel Python
+#### Terminal 1 — Lancer le backend
 
 ```bash
-# Windows
-python -m venv venv
+# Activer l'environnement virtuel (Windows)
 venv\Scripts\activate
+# (Linux/Mac) source venv/bin/activate
 
-# Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
+# Lancer FastAPI (module path vers le fichier FastAPI.py)
+uvicorn Site_Web_Dashboard.BackEnd.FastAPI:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3. Installer les dépendances
+#### Terminal 2 — Servir le frontend
 
+Option A — Avec Python :
 ```bash
-# Pour le simulateur et le backend
-pip install fastapi uvicorn azure-iot-device azure-eventhub python-dotenv websockets
-```
-
-### 4. Configurer les variables d'environnement
-
-Créer/modifier le fichier `.env` à la racine du projet :
-
-```env
-# Simulateur ESP32
-# Obtenir depuis Azure IoT Hub → Appareils → SolarTracker1 → Chaîne de connexion
-CONNECTION_STRING = "HostName=votre-hub.azure-devices.net;DeviceId=SolarTracker1;SharedAccessKey=..."
-
-# Backend
-# Point de terminaison compatible Event Hub du IoT Hub
-CONNECTION_STR = "Endpoint=sb://ihsuprodparres002dednamespace.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=...;EntityPath=iothub-ehub-projet-iot-..."
-CONSUMER_GROUP = "$Default"
-```
-
-## 🚀 Déploiement
-
-### Option 1 : Mode Développement Local
-
-#### Terminal 1 - Lancer le Backend
-
-```bash
-# Activer l'environnement virtuel
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
-
-# Lancer FastAPI
-uvicorn "Site_Web - first version/BackEnd/main:app" --reload --host 0.0.0.0 --port 8000
-```
-
-Le backend sera accessible sur : `http://localhost:8000`
-
-#### Terminal 2 - Lancer le Simulateur ESP32
-
-```bash
-# Activer l'environnement virtuel
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
-
-# Lancer le simulateur
-python simuler_ESP32.py
-```
-
-#### Terminal 3 - Servir le Frontend
-
-Option A - Avec Python :
-```bash
-cd "Site_Web - first version\FrontEnd"
+cd Site_Web_Dashboard/FrontEnd
 python -m http.server 3000
 ```
 
-Option B - Avec Live Server VS Code :
+Option B — Avec l'extension Live Server (VS Code) :
 - Installer l'extension "Live Server"
-- Right-click sur `front_test.html` → "Open with Live Server"
+- Clic droit sur front_test.html → "Open with Live Server"
 
-Accéder au dashboard : `http://localhost:3000/front_test.html` (ou port Live Server)
+Accéder au tableau de bord : http://localhost:3000/front_test.html (ou l'URL fournie par Live Server)
 
-### Option 2 : Déploiement en Production
+## 🔧 Configuration ESP32 (réel)
 
-#### Backend (Azure App Service / Heroku / VPS)
+Si vous utilisez un ESP32 avec Wi‑Fi :
 
-1. **Créer `requirements.txt`** :
-```bash
-pip freeze > requirements.txt
-```
+1. Installer les bibliothèques Arduino nécessaires :
+   - Azure IoT Library for Arduino
+   - WiFi101 (ou la bibliothèque adaptée à votre carte)
 
-2. **Créer `Procfile`** (pour Heroku) :
-```
-web: uvicorn Site_Web.BackEnd.main:app --host 0.0.0.0 --port $PORT
-```
+2. Télécharger `Script_ESP32/Script_ESP32.ino` sur l'ESP32.
 
-3. **Déployer sur Azure App Service** :
-```bash
-# Installer Azure CLI
-# Login
-az login
-
-# Créer le ressource group
-az group create --name IoT-RG --location eastus
-
-# Créer un App Service Plan
-az appservice plan create --name IoT-Plan --resource-group IoT-RG --sku B1 --is-linux
-
-# Créer l'application
-az webapp create --resource-group IoT-RG --plan IoT-Plan --name mon-app-iot --runtime "PYTHON:3.9"
-
-# Déployer
-az webapp up --name mon-app-iot --resource-group IoT-RG
-```
-
-#### Frontend (Static Web Apps / GitHub Pages / Netlify)
-
-1. **Azure Static Web Apps** :
-```bash
-# Créer une static web app qui pointe vers le dossier FrontEnd
-# Configuration : App location: Site_Web\ -\ first\ version\FrontEnd
-```
-
-2. **Netlify** :
-```bash
-npm install -g netlify-cli
-netlify deploy --prod --dir "Site_Web - first version/FrontEnd"
-```
-
-## 🔧 Configuration ESP32 Réel
-
-Si vous utilisez un **ESP32 avec WiFi** (pas la simulation) :
-
-1. Installer les bibliothèques Arduino :
-   - `Azure IoT Library for Arduino`
-   - `WiFi101` (ou adapté à votre board)
-
-2. Télécharger `Script_ESP32/Script_ESP32.ino` sur votre ESP32
-
-3. Configurer les paramètres WiFi et Azure dans le code :
+3. Configurer le Wi‑Fi et Azure dans le code :
 ```cpp
 const char* ssid = "Votre_SSID";
 const char* password = "Votre_PASSWORD";
 const char* iothub_hostname = "votre-hub.azure-devices.net";
 const char* device_id = "SolarTracker1";
+const char* sas_token = ""; // générer via Azure CLI
 ```
 
-4. Téléverser le code avec l'Arduino IDE
+Pour générer un SAS token depuis Azure CLI :
+```bash
+az iot hub generate-sas-token --device-id <DEVICE_ID> --hub-name <NOM_HUB_IOT> --duration 31536000
+```
 
-## 📊 Utilisation du Dashboard
+## 📊 Utilisation du tableau de bord
+
+![Schéma du dashboard](Assets/image.png)
 
 ### Fonctionnalités
-- ✅ Affichage temps réel des données (température, humidité)
-- ✅ Graphiques avec Chart.js
-- ✅ Mise à jour instantanée via WebSocket
-- ✅ Historique des dernières 20 mesures
-- ✅ Indicateurs visuels de seuils
+- Affichage temps réel : température, humidité, luminosité, angles
+- Graphiques avec Chart.js
+- Mise à jour instantanée via WebSocket
+- Console de logs pour le débogage
 
 ### Actions
-- **Connexion automatique** : Le dashboard se connecte automatiquement au backend
-- **Mise à jour des graphiques** : Chaque donnée reçue met à jour les graphiques
-- **Logs en direct** : Console pour déboguer les connexions
+- **Connexion automatique** : le frontend se connecte automatiquement au backend
+- **Mise à jour des graphiques** : chaque donnée reçue met à jour les graphiques
+- **Logs en direct** : pour surveiller la connexion et les messages
 
-## 🐛 Troubleshooting
-
-### Le backend ne reçoit pas les données d'Azure
-
-**Solution** :
-- Vérifier la `CONNECTION_STR` dans `.env`
-- Vérifier que le Consumer Group existe et que les droits sont OK
-- Vérifier les firewall/pare-feu
-
-### Le frontend ne se connecte pas au backend
-
-**Solution** :
-- Vérifier que le backend écoute sur `0.0.0.0:8000`
-- Vérifier l'URL WebSocket dans le frontend (doit être `ws://localhost:8000/ws`)
-- Vérifier la console du navigateur pour les erreurs
-
-### L'ESP32 ne se connecte pas à Azure
-
-**Solution** :
-- Vérifier la connexion WiFi
-- Vérifier le SAS Token (expiré ?)
-- Vérifier les droits du dispositif sur Azure
-
-## 📝 Fichiers Importants
+## 📝 Fichiers importants
 
 ```
 projet_complet/
-├── README.md                  ← Vous êtes ici
+├── README.md
 ├── .env                       ← Variables d'environnement
 ├── simuler_ESP32.py           ← Simulation Python du dispositif
-├── Script_ESP32/
-│   ├── Script_Arduino.ino     ← Code Arduino basique
-│   └── Script_ESP32.ino       ← Code ESP32 avec WiFi/Azure
-└── Site_Web - first version/
+├── Scripts_Arduino_ESP32/
+│   ├── Script_Arduino.ino     ← Code Arduino
+│   └── Script_ESP32.ino       ← Code ESP32
+└── Site_Web_Dashboard/
     ├── BackEnd/
-    │   ├── main.py           ← Application FastAPI
-    │   └── main_V2.py        ← Version alternative
+    │   └── FastAPI.py         ← Backend (FastAPI)
     └── FrontEnd/
-        └── front_test.html   ← Dashboard HTML
+        └── front_test.html    ← Frontend (dashboard)
 ```
 
-## 🔐 Sécurité
+## Ressources utiles
 
-⚠️ **IMPORTANT** :
-- **NE JAMAIS** commiter le fichier `.env` avec les vraies clés !
-- Ajouter `.env` dans `.gitignore`
-- Utiliser des variables d'environnement en production
-- Régulièrement renouveler les SAS Tokens Azure
-- Utiliser HTTPS/WSS en production
+- https://docs.microsoft.com/en-us/azure/iot-hub/  (Documentation Azure IoT Hub)
+- https://fastapi.tiangolo.com/  (FastAPI)
+- https://create.arduino.cc/iot/ (Arduino IoT Cloud)
+- https://www.chartjs.org/ (Chart.js)
 
-```
-# .gitignore
-.env
-__pycache__/
-*.pyc
-venv/
-.idea/
-.vscode/settings.json
-```
+## Licence
 
-## 📚 Ressources Utiles
-
-- [Documentation Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Arduino IoT Cloud](https://create.arduino.cc/iot/overview)
-- [Chart.js Documentation](https://www.chartjs.org/)
-
-## 👨‍💻 Support et Questions
-
-En cas de problema :
-1. Vérifier la section Troubleshooting
-2. Consulter les logs du backend : `uvicorn` affiche les erreurs
-3. Console navigateur (F12) pour les erreurs frontend
-4. Serial Monitor Arduino IDE pour l'ESP32
-
-## 📄 Licence
-
-Projet étudiant - Usage personnel/éducatif
+Projet étudiant — usage personnel / éducatif
 
 ---
 
 **Dernière mise à jour** : Février 2026
-**Status** : ✅ Prêt pour déploiement
+**Statut** : Prêt pour déploiement
