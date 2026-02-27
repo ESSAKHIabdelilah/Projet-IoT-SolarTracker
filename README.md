@@ -1,10 +1,10 @@
 # Projet IoT Complet — Solar Tracker Dashboard
 
-## 📋 Description
+## Description
 
 Système IoT complet pour la surveillance en temps réel de la luminosité et la visualisation des données sur Azure et sur un tableau de bord web. Le projet comprend :
 
-- **Simulation ESP32** : script Python simulant le capteur KS0530 et l'ESP32, envoyant les données vers Azure.
+- **Simulation ESP32** : script Python simulant le système KS0530 et l'ESP32, envoyant les données vers Azure.
 - **Script_ESP32** : code pour l'ESP32 — envoi des données à Azure via MQTT.
 - **Script_Arduino** : code pour l'Arduino — contrôle du système et envoi des données à l'ESP32 via UART.
 - **Backend (FastAPI)** : serveur Python qui consomme les données depuis Azure et les diffuse en temps réel (WebSocket).
@@ -82,7 +82,7 @@ Option B — Avec l'extension Live Server (VS Code) :
 
 Accéder au tableau de bord : http://localhost:3000/front_test.html (ou l'URL fournie par Live Server)
 
-## 🔧 Configuration ESP32 (réel)
+## Configuration ESP32 (réel)
 
 Si vous utilisez un ESP32 avec Wi‑Fi :
 
@@ -106,7 +106,7 @@ Pour générer un SAS token depuis Azure CLI :
 az iot hub generate-sas-token --device-id <DEVICE_ID> --hub-name <NOM_HUB_IOT> --duration 31536000
 ```
 
-## 📊 Utilisation du tableau de bord
+## Utilisation du tableau de bord
 
 ![Schéma du dashboard](Assets/image.png)
 
@@ -121,7 +121,7 @@ az iot hub generate-sas-token --device-id <DEVICE_ID> --hub-name <NOM_HUB_IOT> -
 - **Mise à jour des graphiques** : chaque donnée reçue met à jour les graphiques
 - **Logs en direct** : pour surveiller la connexion et les messages
 
-## 📝 Fichiers importants
+## Fichiers importants
 
 ```
 projet_complet/
